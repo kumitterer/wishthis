@@ -9,14 +9,14 @@ $(function() {
 
         form.addClass('loading');
 
-        fetch('/api/database-test', {
+        fetch('/index.php?page=api&module=database-test', {
             method : 'POST',
             body   : formDatabase
         })
         .then(handleFetchError)
         .then(handleFetchResponse)
         .then(function(response) {
-            if (response.success) {
+            if (response.dbTestSuccess) {
                 $('input[type="submit"]').removeClass('disabled');
 
                 form.form('remove errors');

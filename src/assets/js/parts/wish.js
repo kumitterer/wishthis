@@ -53,7 +53,7 @@ $(function () {
         wish_details
         .modal({
             'onShow'    : function() {
-                var user_is_current = wishlist && wishlist.user === parseInt($('[name="user-id"]').val());
+                var user_is_current = wishlist && wishlist.userId === parseInt($('[name="user-id"]').val());
 
                 if (user_is_current) {
                     $('.ui.button.wish-fulfil').remove();
@@ -72,6 +72,10 @@ $(function () {
             'onHide' : function(modal) {
                 wish_unset();
             },
+            'onHidden' : function() {
+                $(this).modal('destroy');
+                $(this).remove();
+            }
         })
         .modal('show')
         .addClass(wish_details_size);
@@ -89,7 +93,7 @@ $(function () {
             }
         );
 
-        fetch('/?' + get_wish, { method: 'GET' })
+        fetch('/index.php?' + get_wish, { method: 'GET' })
         .then(handleFetchError)
         .then(handleFetchResponse)
         .then(function(response) {
@@ -143,7 +147,7 @@ $(function () {
 
         $(this).addClass('disabled loading');
 
-        fetch('/api/wishes', mark_as_fulfilled)
+        fetch('/index.php?page=api&module=wishes', mark_as_fulfilled)
         .then(handleFetchError)
         .then(handleFetchResponse)
         .then(function(response) {
@@ -173,7 +177,7 @@ $(function () {
 
         $(this).addClass('disabled loading');
 
-        fetch('/api/wishes', mark_as_fulfilled)
+        fetch('/index.php?page=api&module=wishes', mark_as_fulfilled)
         .then(handleFetchError)
         .then(handleFetchResponse)
         .then(function(response) {
@@ -200,7 +204,7 @@ $(function () {
          * Initialise
          */
         /** Checkbox */
-        const checkbox_is_purchasable = wish_edit.find('.ui.checkbox.wish-is-purchasable');
+        var checkbox_is_purchasable = wish_edit.find('.ui.checkbox.wish-is-purchasable');
 
         checkbox_is_purchasable
         .checkbox({
@@ -224,19 +228,28 @@ $(function () {
         wish_edit
         .modal({
             'onApprove' : wishSave,
+            'onHidden'  : function() {
+                $(this).modal('destroy');
+                $(this).remove();
+            }
         })
         .modal('show')
         .addClass(wish_edit_size);
 
         /** Initialise Tabs */
         wish_edit.find('.item[data-tab]')
-        .tab();
+        .tab({
+            'context' : '.wishlist-wish-edit'
+        });
 
         /** General */
+        var decoded_title       = $('<div>').html(wish_local.title).text();
+        var decoded_description = $('<div>').html(wish_local.description).text();
+
         $('[name="wish_id"]').val(wish_local.id);
         $('[name="wishlist_id"]').val(wish_local.wishlist);
-        $('[name="wish_title"]').val(wish_local.title);
-        $('[name="wish_description"]').val(wish_local.description);
+        $('[name="wish_title"]').val(decoded_title);
+        $('[name="wish_description"]').val(decoded_description);
         $('[name="wish_image"]').val(wish_local.image);
         $('[name="wish_url"]').val(wish_local.url);
         $('.ui.selection.dropdown.priority').dropdown('set selected', wish_local.priority);
@@ -264,7 +277,7 @@ $(function () {
                 )
             );
 
-            fetch('/api/wishes', {
+            fetch('/index.php?page=api&module=wishes', {
                 'method' : 'POST',
                 'body'   : wish_data,
             })
@@ -322,7 +335,7 @@ $(function () {
                     'wish_id' : wish_local.id
                 });
 
-                fetch('/api/wishes', {
+                fetch('/index.php?page=api&module=wishes', {
                     'method' : 'DELETE',
                     'body'   : wish_delete,
                 })

@@ -9,20 +9,20 @@ $(function () {
     /**
      * Get Wishlists
      */
-    var wishlists_items = [];
-    var wishlists_api   = {
+    var wishlistsItems = [];
+    var wishlistsApi   = {
         'action'    : 'get wishlists',
-        'onSuccess' : function(response, dropdown_wishlists, xhr) {
+        'onSuccess' : function(response, dropdownWishlists, xhr) {
             /** Save response for later use */
-            wishlists       = response.wishlists;
-            wishlists_items = response.wishlists_items;
+            wishlists      = response.wishlists;
+            wishlistsItems = response.wishlistsItems;
 
             /** Setup and populate dropdown */
-            var dropdown_values = {
-                'values' : wishlists_items,
+            var dropdownValues = {
+                'values' : wishlistsItems,
             };
 
-            dropdown_wishlists.dropdown('setup menu', dropdown_values);
+            dropdownWishlists.dropdown('setup menu', dropdownValues);
 
             /** Select a dropdown item */
             setDropdownWishlistsSelection();
@@ -47,22 +47,25 @@ $(function () {
 
     $('.ui.dropdown.wishlists')
     .dropdown({
-        onChange : function(wishlist_id, text, choice) {
+        'preserveHTML' : false,
+        'onChange'     : function(wishlist_id, text, choice) {
             wishthis.$_GET.id = wishlist_id;
 
             if (wishlist_id) {
                 /** Get wishlist */
-                fetch('/api/wishlists/' + wishlist_id, { method: 'GET' })
+                fetch('/index.php?page=api&module=wishlists&id=' + wishlist_id, { method: 'GET' })
                 .then(handleFetchError)
                 .then(handleFetchResponse)
                 .then(function(response) {
-                    var wishlist;
-
-                    /** Set current wishlist */
-                    wishlist = response.results;
+                    /** Set currently selected wishlist */
+                    wishlists.forEach(wishlistI => {
+                        if (wishlistI.id === parseInt(wishlist_id)) {
+                            wishlist = wishlistI;
+                        }
+                    });
 
                     /** Set share link */
-                    $('.wishlist-share').attr('href', '/wishlist/' + wishlist.hash);
+                    $('.wishlist-share').attr('href', '/wishlist/' + $(wishlist).prop('hash'));
 
                     /** Enable wishlist options buttons */
                     $('.button.wishlist-wish-add').removeClass('disabled');
@@ -107,7 +110,7 @@ $(function () {
                             'wish_priority'  : -1,
                         }
                     );
-                    fetch('/?' + get_wishes, { method: 'GET' })
+                    fetch('/index.php?' + get_wishes, { method: 'GET' })
                     .then(handleFetchError)
                     .then(handleFetchResponse)
                     .then(function(response) {
@@ -159,7 +162,7 @@ $(function () {
             }
         },
     })
-    .api(wishlists_api)
+    .api(wishlistsApi)
     .api('query');
 
     /**
@@ -198,7 +201,7 @@ $(function () {
         var formData   = new URLSearchParams(new FormData(formRename[0]));
         formData.append('wishlist_id', wishthis.$_GET.id);
 
-        fetch('/api/wishlists', {
+        fetch('/index.php?page=api&module=wishlists', {
             method : 'PUT',
             body   : formData,
         })
@@ -280,7 +283,7 @@ $(function () {
                             'wishlist_id' : wishlist_id,
                         }
                     );
-                    fetch('/api/wishlists', {
+                    fetch('/index.php?page=api&module=wishlists', {
                         'method' : 'DELETE',
                         'body'   : delete_wishlist,
                     })
@@ -387,7 +390,7 @@ $(function () {
 
                 var formData = new URLSearchParams(new FormData(formWishlistCreate[0]));
 
-                fetch('/api/wishlists', {
+                fetch('/index.php?page=api&module=wishlists', {
                     method : 'POST',
                     body   : formData
                 })
@@ -451,7 +454,7 @@ $(function () {
                 }
             );
 
-            fetch('/?' + params_url, {
+            fetch('/index.php?' + params_url, {
                 method: 'GET'
             })
             .then(handleFetchError)
@@ -488,7 +491,7 @@ $(function () {
                                 }
                             );
 
-                            fetch('/?page=api&module=wishes', {
+                            fetch('/index.php?page=api&module=wishes', {
                                 method : 'PUT',
                                 body   : formData
                             })
@@ -524,7 +527,7 @@ $(function () {
         var formData = new URLSearchParams(new FormData(formAddOrEdit[0]));
         formData.append('wishlist_id', wishthis.$_GET.id);
 
-        fetch('/api/wishes', {
+        fetch('/index.php?page=api&module=wishes', {
             'method' : 'POST',
             'body'   : formData,
         })
@@ -552,7 +555,7 @@ $(function () {
      * Update URL
      */
     function updateURL() {
-        fetch('/api/url/' + window.btoa('/?' + urlParams.toString()), { method: 'GET' })
+        fetch('/index.php?page=api&module=url&url=' + window.btoa('/?' + urlParams.toString()), { method: 'GET' })
         .then(handleFetchError)
         .then(handleFetchResponse)
         .then(function(response) {
@@ -571,15 +574,16 @@ $(function () {
             if (wishthis.$_GET.id) {
                 wishlist_id = wishthis.$_GET.id;
             } else {
-                if (Object.keys(wishlists).length >= 1) {
-                    var first_wishlist_id = Object.keys(wishlists)[0];
+                if (wishlists.length >= 1) {
+                    wishlist = $(wishlists).first();
+
+                    var first_wishlist_id = wishlist.prop('id');
 
                     wishlist_id = first_wishlist_id;
                 }
             }
 
-            wishlist = wishlists[wishlist_id];
-            dropdown_wishlists.dropdown('set selected', wishlist.id);
+            dropdown_wishlists.dropdown('set selected', wishlist_id);
         }
     }
 
